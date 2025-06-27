@@ -2,15 +2,17 @@ require 'rails_helper'
 
 RSpec.describe CoursesController, type: :controller do
   describe 'GET #index' do
-    let!(:course1) { create(:course, :with_tutors) }
-    let!(:course2) { create(:course, :with_tutors) }
+    before do
+      create(:course, :with_tutors)
+      create(:course, :with_tutors)
+    end
 
     it 'returns all courses with their tutors' do
       get :index
-      
+
       expect(response).to have_http_status(:ok)
-      json_response = JSON.parse(response.body)
-      
+      json_response = response.parsed_body
+
       expect(json_response.length).to eq(2)
       expect(json_response.first).to have_key('tutors')
       expect(json_response.first['tutors'].length).to eq(2)
@@ -18,11 +20,11 @@ RSpec.describe CoursesController, type: :controller do
 
     it 'returns empty array when no courses exist' do
       Course.destroy_all
-      
+
       get :index
-      
+
       expect(response).to have_http_status(:ok)
-      json_response = JSON.parse(response.body)
+      json_response = response.parsed_body
       expect(json_response).to eq([])
     end
   end
@@ -32,10 +34,10 @@ RSpec.describe CoursesController, type: :controller do
 
     it 'returns the specific course with tutors' do
       get :show, params: { id: course.id }
-      
+
       expect(response).to have_http_status(:ok)
-      json_response = JSON.parse(response.body)
-      
+      json_response = response.parsed_body
+
       expect(json_response['id']).to eq(course.id)
       expect(json_response['name']).to eq(course.name)
       expect(json_response).to have_key('tutors')
@@ -43,10 +45,10 @@ RSpec.describe CoursesController, type: :controller do
     end
 
     it 'returns 404 when course not found' do
-      get :show, params: { id: 99999 }
-      
+      get :show, params: { id: 99_999 }
+
       expect(response).to have_http_status(:not_found)
-      json_response = JSON.parse(response.body)
+      json_response = response.parsed_body
       expect(json_response['error']).to eq('Course not found')
     end
   end
@@ -78,21 +80,21 @@ RSpec.describe CoursesController, type: :controller do
       end
 
       it 'creates a new course with tutors' do
-        expect {
+        expect do
           post :create, params: valid_params
-        }.to change(Course, :count).by(1).and change(Tutor, :count).by(2)
-        
+        end.to change(Course, :count).by(1).and change(Tutor, :count).by(2)
+
         expect(response).to have_http_status(:created)
-        json_response = JSON.parse(response.body)
-        
+        json_response = response.parsed_body
+
         expect(json_response['name']).to eq('Ruby on Rails')
         expect(json_response['tutors'].length).to eq(2)
       end
 
       it 'returns the created course with tutors in response' do
         post :create, params: valid_params
-        
-        json_response = JSON.parse(response.body)
+
+        json_response = response.parsed_body
         expect(json_response).to have_key('id')
         expect(json_response).to have_key('tutors')
         expect(json_response['tutors'].first).to have_key('name')
@@ -112,17 +114,17 @@ RSpec.describe CoursesController, type: :controller do
       end
 
       it 'does not create a course' do
-        expect {
+        expect do
           post :create, params: invalid_params
-        }.not_to change(Course, :count)
-        
+        end.not_to change(Course, :count)
+
         expect(response).to have_http_status(:unprocessable_entity)
       end
 
       it 'returns validation errors' do
         post :create, params: invalid_params
-        
-        json_response = JSON.parse(response.body)
+
+        json_response = response.parsed_body
         expect(json_response).to have_key('errors')
         expect(json_response['errors']).to be_an(Array)
         expect(json_response['errors']).not_to be_empty
@@ -149,17 +151,17 @@ RSpec.describe CoursesController, type: :controller do
       end
 
       it 'does not create course or tutors when tutor data is invalid' do
-        expect {
+        expect do
           post :create, params: invalid_tutor_params
-        }.not_to change(Course, :count)
-        
+        end.not_to change(Course, :count)
+
         expect(response).to have_http_status(:unprocessable_entity)
       end
     end
 
     context 'with duplicate tutor email' do
-      let!(:existing_tutor) { create(:tutor, email: 'duplicate@example.com') }
-      
+      let(:existing_tutor) { create(:tutor, email: 'duplicate@example.com') }
+
       let(:duplicate_email_params) do
         {
           course: {
@@ -179,12 +181,15 @@ RSpec.describe CoursesController, type: :controller do
       end
 
       it 'does not create course when tutor email is duplicate' do
-        expect {
+        # Create the existing tutor before the test
+        existing_tutor
+
+        expect do
           post :create, params: duplicate_email_params
-        }.not_to change(Course, :count)
-        
+        end.not_to change(Course, :count)
+
         expect(response).to have_http_status(:unprocessable_entity)
-        json_response = JSON.parse(response.body)
+        json_response = response.parsed_body
         expect(json_response['errors']).to include('Tutors email has already been taken')
       end
     end

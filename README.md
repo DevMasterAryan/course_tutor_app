@@ -1,5 +1,7 @@
 # Course and Tutor Management API
 
+[![Test Suite](https://github.com/yourusername/course_tutor_app/actions/workflows/test.yml/badge.svg)](https://github.com/yourusername/course_tutor_app/actions/workflows/test.yml)
+
 A Rails API application with PostgreSQL database for managing courses and tutors. This project demonstrates RESTful API design, comprehensive testing, and modern Rails development practices.
 
 ## 🚀 Features
@@ -13,6 +15,7 @@ A Rails API application with PostgreSQL database for managing courses and tutors
 - **Error Handling**: Proper error responses and status codes
 - **Docker Support**: Fully containerized application with PostgreSQL and automatic database setup
 - **Modern Rails**: Built with Rails 7.1 and Ruby 3.3.0
+- **CI/CD Pipeline**: Automated testing on every commit and pull request
 
 ## 📋 Prerequisites
 
@@ -428,72 +431,3 @@ course_tutor_app/
 - ✅ API response formats
 - ✅ Error status codes
 - ✅ Database relationships
-
-## 🚀 Deployment Considerations
-
-### Production Environment
-- Update `config/database.yml` with production database credentials
-- Set appropriate environment variables
-- Configure proper logging and monitoring
-- Implement authentication and authorization
-- Add rate limiting and security headers
-
-### Environment Variables
-```bash
-# Database
-DATABASE_URL=postgresql://user:password@host:port/database
-
-# Rails
-RAILS_ENV=production
-RAILS_SERVE_STATIC_FILES=true
-RAILS_LOG_TO_STDOUT=true
-
-# Security
-SECRET_KEY_BASE=your_secret_key_here
-```
-
-## 🔍 Code Quality & Best Practices
-
-### Rails Conventions
-- Follows Rails conventions for naming and structure
-- Uses proper RESTful routing
-- Implements nested attributes for complex forms
-- Proper error handling and status codes
-
-### Testing Best Practices
-- Comprehensive test coverage
-- Isolated tests with proper setup/teardown
-- Realistic test data with factories
-- Clear test descriptions and organization
-
-### API Design
-- Consistent JSON response format
-- Proper HTTP status codes
-- Clear error messages
-- Nested resource handling
-
-### Docker Best Practices
-- Automatic database setup and migration
-- Separate test environment
-- Proper service dependencies
-- Health checks and error handling
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📝 License
-
-This project is created for demonstration purposes as part of a job interview assignment.
-
-## 👨‍💻 Author
-
-Created as part of a job interview assignment to demonstrate Rails API development skills, testing practices, and modern development workflows.
-
----
-
-**Note**: This application is designed for demonstration and learning purposes. For production use, additional security measures, authentication, and error handling should be implemented.

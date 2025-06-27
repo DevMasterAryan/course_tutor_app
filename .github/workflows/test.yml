@@ -1,0 +1,37 @@
+name: Test Suite
+
+on:
+  push:
+    branches: [ main, develop, feature/*, bugfix/* ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build and test with Docker Compose
+      run: |
+        # Build the application
+        docker-compose build
+        
+        # Run tests
+        docker-compose run --rm test
+        
+        # Clean up
+        docker-compose down
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: test-results
+        path: spec/examples.txt
+        retention-days: 7 
