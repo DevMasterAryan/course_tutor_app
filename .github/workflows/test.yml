@@ -10,6 +10,21 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_USER: postgres
+          POSTGRES_DB: course_tutor_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -22,8 +37,12 @@ jobs:
         # Build the application
         docker compose build
         
-        # Run tests
-        docker compose run --rm test
+        # Create test database and run migrations
+        docker compose run --rm -e DATABASE_URL=postgresql://postgres:postgres@postgres:5432/course_tutor_test -e RAILS_ENV=test web rails db:create
+        docker compose run --rm -e DATABASE_URL=postgresql://postgres:postgres@postgres:5432/course_tutor_test -e RAILS_ENV=test web rails db:migrate
+        
+        # Run tests with correct database configuration
+        docker compose run --rm -e DATABASE_URL=postgresql://postgres:postgres@postgres:5432/course_tutor_test -e RAILS_ENV=test web bundle exec rspec
         
         # Clean up
         docker compose down
