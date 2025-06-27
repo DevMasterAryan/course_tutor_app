@@ -20,13 +20,13 @@ jobs:
     - name: Build and test with Docker Compose
       run: |
         # Build the application
-        docker-compose build
+        docker compose build
         
         # Run tests
-        docker-compose run --rm test
+        docker compose run --rm test
         
         # Clean up
-        docker-compose down
+        docker compose down
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
