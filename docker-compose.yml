@@ -1,0 +1,43 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: course_tutor_development
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+
+  web:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/course_tutor_development
+      RAILS_ENV: development
+      # Allow remote database URLs only for test environment
+      DATABASE_CLEANER_ALLOW_REMOTE_DATABASE_URL: "false"
+    command: ./docker-entrypoint.sh
+
+  # Test service with different environment
+  test:
+    build: .
+    volumes:
+      - .:/app
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/course_tutor_test
+      RAILS_ENV: test
+      # Allow remote database URLs for test environment
+      DATABASE_CLEANER_ALLOW_REMOTE_DATABASE_URL: "true"
+    command: bundle exec rspec
+
+volumes:
+  postgres_data:
