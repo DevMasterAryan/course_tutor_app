@@ -61,4 +61,7 @@ Rails.application.configure do
 
   # Raise error when a before_action's only/except options reference missing actions
   config.action_controller.raise_on_missing_callback_actions = true
+
+  # Set a secret key base for JWT authentication in tests
+  config.secret_key_base = 'test_secret_key_base_for_jwt_authentication_in_test_environment_only'
 end
