@@ -8,9 +8,11 @@ A Rails API for managing courses and their associated tutors. Built with Rails 7
 
 This is a simple but well-structured Rails API that lets you:
 - Create courses with multiple tutors in a single request
-- List all courses with their tutors
+- List all courses with their tutors (with pagination)
 - Get specific course details with tutor information
 - Handle nested attributes for complex data relationships
+- **JWT-based authentication** for secure API access
+- **Pagination** for efficient data retrieval
 
 The app demonstrates modern Rails development practices including proper testing, code quality tools, and CI/CD setup.
 
@@ -56,45 +58,127 @@ bundle exec rspec
 rails server
 ```
 
-## API Endpoints
+## Database Seeding
 
-### Create a Course with Tutors
+The app includes a comprehensive seeds file with sample data for testing and demonstration.
+
+### Populate with Sample Data
+
 ```bash
-POST /courses
+# With Rails
+rails db:seed
+
+# With Docker
+docker-compose exec web rails db:seed
 ```
 
-Example request:
-```json
+### Sample Data Includes
+
+**Users (5 accounts):**
+- `admin@example.com` / `password123`
+- `user1@example.com` / `password123`
+- `user2@example.com` / `password123`
+- `developer@example.com` / `password123`
+- `tester@example.com` / `password123`
+
+**Courses (10 courses):**
+- Ruby on Rails Fundamentals (40 hours, 3 tutors)
+- JavaScript Mastery (35 hours, 2 tutors)
+- Python for Data Science (45 hours, 3 tutors)
+- React Development (30 hours, 2 tutors)
+- DevOps Engineering (50 hours, 3 tutors)
+- Database Design & SQL (25 hours, 1 tutor)
+- Mobile App Development (55 hours, 2 tutors)
+- Cybersecurity Fundamentals (40 hours, 2 tutors)
+- Machine Learning Basics (60 hours, 3 tutors)
+- Web Design & UX (30 hours, 2 tutors)
+
+**Tutors (25 total):**
+- Realistic names, emails, and phone numbers
+- Varied experience levels (4-13 years)
+- Perfect for testing pagination features
+
+## Authentication
+
+The API uses JWT (JSON Web Tokens) for authentication. All course endpoints require a valid token.
+
+### Register a New User
+```bash
+POST /auth/register
+Content-Type: application/json
+
 {
-  "course": {
-    "name": "Ruby on Rails Fundamentals",
-    "description": "Learn the basics of Ruby on Rails",
-    "duration_hours": 40,
-    "tutors_attributes": [
-      {
-        "name": "John Doe",
-        "email": "john@example.com",
-        "phone": "+1-555-0123",
-        "experience_years": 5
-      }
-    ]
+  "user": {
+    "email": "user@example.com",
+    "password": "password123",
+    "password_confirmation": "password123"
   }
 }
 ```
 
-### List All Courses
+### Login
 ```bash
-GET /courses
+POST /auth/login
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "password123"
+}
 ```
 
-Returns all courses with their tutors included.
-
-### Get Specific Course
+### Using the Token
+Include the token in the Authorization header for all API requests:
 ```bash
-GET /courses/:id
+Authorization: Bearer <your_jwt_token>
 ```
 
-Returns a specific course with its tutors.
+## API Endpoints
+
+### Authentication
+- `POST /auth/register` - Register a new user
+- `POST /auth/login` - Login and get JWT token
+
+### Protected Endpoints (require authentication)
+- `POST /courses` - Create course with tutors using nested attributes
+- `GET /courses` - List all courses with their tutors (paginated)
+- `GET /courses/:id` - Get specific course with tutors
+
+## Pagination
+
+The courses index endpoint supports pagination with the following parameters:
+
+- `page` - Page number (default: 1)
+- `per_page` - Items per page (default: 10, max: 100)
+
+### Example Pagination Request
+```bash
+GET /courses?page=2&per_page=5
+Authorization: Bearer <your_jwt_token>
+```
+
+### Pagination Response Format
+```json
+{
+  "courses": [
+    {
+      "id": 1,
+      "name": "Ruby on Rails",
+      "description": "Learn Ruby on Rails",
+      "duration_hours": 40,
+      "tutors": [...]
+    }
+  ],
+  "pagination": {
+    "page": 2,
+    "per_page": 5,
+    "total_count": 25,
+    "total_pages": 5,
+    "has_next": true,
+    "has_prev": true
+  }
+}
+```
 
 ## Testing
 
@@ -107,6 +191,7 @@ bundle exec rspec
 # Run specific test types
 bundle exec rspec spec/models/
 bundle exec rspec spec/controllers/
+bundle exec rspec spec/services/
 
 # With Docker
 docker-compose run test
@@ -117,6 +202,8 @@ Tests cover:
 - Controller endpoints and error handling
 - Factory data generation
 - API response formats
+- Authentication and authorization
+- Pagination functionality
 
 ## Code Quality
 
@@ -149,29 +236,45 @@ Check the badge at the top for current build status.
 app/
 ├── controllers/
 │   ├── application_controller.rb
+│   ├── auth_controller.rb
 │   └── courses_controller.rb
 ├── models/
 │   ├── course.rb
-│   └── tutor.rb
+│   ├── tutor.rb
+│   └── user.rb
+├── services/
+│   ├── jwt_service.rb
+│   └── pagination_service.rb
 spec/
 ├── factories/
 ├── models/
-└── controllers/
+├── controllers/
+└── services/
 config/
 ├── database.yml
 └── routes.rb
+db/
+├── seeds.rb
+└── migrate/
 ```
 
 ## Key Features
 
 - **Nested Attributes**: Create courses and tutors in one request
 - **Email Validation**: Case-insensitive email uniqueness
+- **JWT Authentication**: Secure token-based authentication
+- **Pagination**: Efficient data retrieval with configurable page sizes
+- **Sample Data**: Comprehensive seeds file for testing
 - **Comprehensive Testing**: Full RSpec test coverage
 - **Docker Support**: Easy setup with automatic database initialization
 - **Code Quality**: RuboCop and Brakeman integration
 - **CI/CD**: Automated testing and quality checks
 
 ## Database Schema
+
+**Users:**
+- email (string, unique)
+- password_digest (string)
 
 **Courses:**
 - name (string, unique)
@@ -194,6 +297,9 @@ This was built as a demonstration of Rails API development skills. The code foll
 - Database Cleaner for test isolation
 - Nested attributes for complex form handling
 - Comprehensive validation rules
+- JWT-based authentication system
+- Pagination service for efficient data handling
+- Sample data seeding for easy testing
 
 ## Environment Setup
 
@@ -204,3 +310,11 @@ For Docker, the database is automatically configured:
 - Database: `course_tutor_development`
 - Username: `postgres`
 - Password: `postgres`
+
+## Contributing
+
+Feel free to submit issues or pull requests. Make sure to run the test suite before submitting changes.
+
+## License
+
+This project was created for demonstration purposes.

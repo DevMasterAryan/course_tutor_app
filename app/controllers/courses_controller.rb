@@ -4,7 +4,18 @@ class CoursesController < ApplicationController
   # GET /courses
   def index
     @courses = Course.includes(:tutors).all
-    render json: @courses.as_json(include: :tutors), status: :ok
+
+    # Apply pagination
+    pagination_result = PaginationService.new(
+      @courses,
+      page: params[:page],
+      per_page: params[:per_page]
+    ).paginate
+
+    render json: {
+      courses: pagination_result[:data].as_json(include: :tutors),
+      pagination: pagination_result[:pagination]
+    }, status: :ok
   end
 
   # GET /courses/:id

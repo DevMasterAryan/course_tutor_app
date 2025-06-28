@@ -1,21 +1,40 @@
 require 'rails_helper'
 
 RSpec.describe CoursesController, type: :controller do
+  let(:user) { create(:user) }
+  let(:token) { JwtService.encode(user_id: user.id) }
+
+  before do
+    request.headers['Authorization'] = "Bearer #{token}"
+  end
+
   describe 'GET #index' do
     before do
-      create(:course, :with_tutors)
-      create(:course, :with_tutors)
+      create_list(:course, 15, :with_tutors)
     end
 
-    it 'returns all courses with their tutors' do
+    it 'returns paginated courses with their tutors' do
       get :index
 
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
 
-      expect(json_response.length).to eq(2)
-      expect(json_response.first).to have_key('tutors')
-      expect(json_response.first['tutors'].length).to eq(2)
+      expect(json_response['courses'].length).to eq(10) # Default per_page
+      expect(json_response['courses'].first).to have_key('tutors')
+    end
+
+    it 'returns correct pagination metadata' do
+      get :index
+
+      json_response = response.parsed_body
+      expect(json_response['pagination']).to include(
+        'page' => 1,
+        'per_page' => 10,
+        'total_count' => 15,
+        'total_pages' => 2,
+        'has_next' => true,
+        'has_prev' => false
+      )
     end
 
     it 'returns empty array when no courses exist' do
@@ -25,7 +44,51 @@ RSpec.describe CoursesController, type: :controller do
 
       expect(response).to have_http_status(:ok)
       json_response = response.parsed_body
-      expect(json_response).to eq([])
+      expect(json_response['courses']).to eq([])
+      expect(json_response['pagination']['total_count']).to eq(0)
+    end
+
+    context 'with pagination parameters' do
+      it 'returns second page with 5 items' do
+        get :index, params: { page: 2, per_page: 5 }
+
+        expect(response).to have_http_status(:ok)
+        json_response = response.parsed_body
+
+        expect(json_response['courses'].length).to eq(5)
+      end
+
+      it 'returns correct pagination metadata for second page' do
+        get :index, params: { page: 2, per_page: 5 }
+
+        json_response = response.parsed_body
+        expect(json_response['pagination']).to include(
+          'page' => 2,
+          'per_page' => 5,
+          'total_count' => 15,
+          'total_pages' => 3,
+          'has_next' => true,
+          'has_prev' => true
+        )
+      end
+
+      it 'respects maximum per_page limit' do
+        get :index, params: { per_page: 150 }
+
+        expect(response).to have_http_status(:ok)
+        json_response = response.parsed_body
+
+        expect(json_response['pagination']['per_page']).to eq(100)
+      end
+    end
+
+    context 'without authentication' do
+      before { request.headers['Authorization'] = nil }
+
+      it 'returns unauthorized' do
+        get :index
+        expect(response).to have_http_status(:unauthorized)
+      end
     end
   end
 
@@ -50,6 +113,15 @@ RSpec.describe CoursesController, type: :controller do
       expect(response).to have_http_status(:not_found)
       json_response = response.parsed_body
       expect(json_response['error']).to eq('Course not found')
+    end
+
+    context 'without authentication' do
+      before { request.headers['Authorization'] = nil }
+
+      it 'returns unauthorized' do
+        get :show, params: { id: course.id }
+        expect(response).to have_http_status(:unauthorized)
+      end
     end
   end
 
@@ -191,6 +263,15 @@ RSpec.describe CoursesController, type: :controller do
         expect(response).to have_http_status(:unprocessable_entity)
         json_response = response.parsed_body
         expect(json_response['errors']).to include('Tutors email has already been taken')
+      end
+    end
+
+    context 'without authentication' do
+      before { request.headers['Authorization'] = nil }
+
+      it 'returns unauthorized' do
+        post :create, params: { course: { name: 'Test Course' } }
+        expect(response).to have_http_status(:unauthorized)
       end
     end
   end
