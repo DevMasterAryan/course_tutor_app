@@ -45,8 +45,14 @@ jobs:
         # Build the application
         docker compose build
         
+        # Create test database
+        docker run --rm --network host -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web rails db:create
+        
+        # Run migrations
+        docker run --rm --network host -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web rails db:migrate
+        
         # Run tests
-        docker compose run --rm test
+        docker run --rm --network host -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web bundle exec rspec
         
         # Clean up
         docker compose down
