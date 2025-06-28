@@ -108,7 +108,7 @@ jobs:
 
     - name: Run Brakeman security check
       run: |
-        bundle exec brakeman --no-progress --output-format json --output brakeman-report.json
+        bundle exec brakeman --no-progress --output json --output-file brakeman-report.json
 
     - name: Upload security report
       uses: actions/upload-artifact@v4
