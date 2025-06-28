@@ -1,6 +1,6 @@
 FactoryBot.define do
   factory :course do
-    name { Faker::Educator.course_name }
+    sequence(:name) { |n| "#{Faker::Educator.course_name} #{n}" }
     description { Faker::Lorem.paragraph }
     duration_hours { rand(10..100) }
 
