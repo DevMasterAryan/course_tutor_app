@@ -38,11 +38,11 @@ jobs:
         docker compose build
         
         # Create test database and run migrations
-        docker run --rm -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web rails db:create
-        docker run --rm -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web rails db:migrate
+        docker run --rm --network host -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web rails db:create
+        docker run --rm --network host -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web rails db:migrate
         
         # Run tests
-        docker run --rm -e DATABASE_URL=postgresql://postgres:postgres@host.docker.internal:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web bundle exec rspec
+        docker run --rm --network host -e DATABASE_URL=postgresql://postgres:postgres@localhost:5432/course_tutor_test -e RAILS_ENV=test course_tutor_app-web bundle exec rspec
 
     - name: Upload test results
       uses: actions/upload-artifact@v4
