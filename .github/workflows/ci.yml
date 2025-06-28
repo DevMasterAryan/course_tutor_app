@@ -73,8 +73,6 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Set up Ruby
       uses: ruby/setup-ruby@v1
@@ -86,22 +84,10 @@ jobs:
       run: |
         bundle install
 
-    - name: Run RuboCop and auto-correct
+    - name: Run RuboCop
       run: |
-        # Auto-correct safe offenses
-        bundle exec rubocop -a
-        
-        # Check if there are any remaining issues
+        # Check for code style violations
         bundle exec rubocop --format progress
-
-    - name: Commit auto-corrected changes
-      if: always()
-      run: |
-        git config --local user.email "action@github.com"
-        git config --local user.name "GitHub Action"
-        git add -A
-        git diff --quiet && git diff --staged --quiet || git commit -m "Auto-correct RuboCop offenses"
-        git push
 
   security:
     runs-on: ubuntu-latest
